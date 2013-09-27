@@ -138,7 +138,7 @@ if __name__ == "__main__":
         default=False,
         action='store_true',
         help="Create subdirectories for posts by each user.")
-    parser.add_argument('subreddits', nargs='*', metavar='subreddit')
+    parser.add_argument('subreddits', nargs='+', metavar='subreddit')
     args = parser.parse_args()
 
     rs = RSnatcher("rsnatcher/0.1 (subreddit image and video grabber)", subdirs=args.subdirs)
