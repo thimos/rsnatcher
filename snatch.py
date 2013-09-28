@@ -13,10 +13,11 @@ import sys
 
 class RSnatcher(object):
     image_re = r'.*\.(jpeg|jpg|png)$'
-    video_domains = ('gayforit.eu', 'gotgayporn.com', 'empflix.com',
-                     'jizzhut.lua', 'keezmovies.com','manhub.com',
-                     'pornhub.com', 'xnxx.com', 'xhamster.com', 'xtube.com',
-                     'xvideos.com', 'youjizz.com')
+    video_domains = ('beeg.com', 'gayforit.eu', 'gotgayporn.com',
+                     'empflix.com', 'jizzhut.lua', 'keezmovies.com',
+                     'manhub.com', 'pornhub.com', 'redtube.com',
+                     'spankwire.com', 'totallynsfw.com', 'xnxx.com',
+                     'xhamster.com', 'xtube.com', 'xvideos.com', 'youjizz.com')
 
     def __init__(self, user_agent, subdirs=False):
         self.user_agent = user_agent
