@@ -19,9 +19,10 @@ class RSnatcher(object):
                      'spankwire.com', 'totallynsfw.com', 'xnxx.com',
                      'xhamster.com', 'xtube.com', 'xvideos.com', 'youjizz.com')
 
-    def __init__(self, user_agent, subdirs=False):
+    def __init__(self, user_agent, reddit_subdirs=False, user_subdirs=False):
         self.user_agent = user_agent
-        self.subdirs = subdirs
+        self.reddit_subdirs = reddit_subdirs
+        self.user_subdirs = user_subdirs
         self.image_regex = re.compile(self.image_re)
         self.video_regex = re.compile(
             '.*(' +
@@ -31,7 +32,8 @@ class RSnatcher(object):
             r'source src=\\x22(.*video_file.*)\\x22 type=\\x22video/mp4\\x22'
             )
 
-    def download(self, url, title=None, length=None, user=None):
+    def download(self, url, title=None, length=None, subreddit=None,
+            user=None):
         # we do this to get the final URL
         r = requests.get(
             url,
@@ -49,12 +51,20 @@ class RSnatcher(object):
         filename = os.path.basename(filename)
 
         # split into separate subdirectories when requested
-        if self.subdirs and user:
-            dirname = os.path.basename(user)
-            if not os.path.exists(dirname):
-                os.mkdir(dirname)
+        path = ""
 
-            filename = os.path.join(dirname, filename)
+        if self.reddit_subdirs and subreddit:
+            path = os.path.join(path, os.path.basename(subreddit))
+            if not os.path.exists(path):
+                os.mkdir(path)
+
+        if self.user_subdirs and user:
+            path = os.path.join(path, os.path.basename(user))
+            if not os.path.exists(path):
+                os.mkdir(path)
+
+        if len(path) > 0:
+            filename = os.path.join(path, filename)
 
         # check that file does not already exist
         if os.path.exists(filename):
@@ -108,7 +118,7 @@ class RSnatcher(object):
             # check if this post is an image
             if self.image_regex.match(url):
                 print((subreddit, title, author, url))
-                self.download(url, user=author)
+                self.download(url, subreddit=subreddit, user=author)
 
             # check if this post is a video
             if self.video_regex.match(url):
@@ -120,6 +130,7 @@ class RSnatcher(object):
                     url=media['link'][0]['url'],
                     title=media['page_title'],
                     length=int(media['link'][0]['length_bytes']),
+                    subreddit=subreddit,
                     user=author)
 
             # check if this post is a tumblr link
@@ -127,7 +138,7 @@ class RSnatcher(object):
                 r = requests.get(url, headers={'User-Agent': self.user_agent})
                 m = self.tumblr_video_regex.search(r.text)
                 if m:
-                    self.download(m.group(1), user=author)
+                    self.download(m.group(1), subreddit=subreddit, user=author)
 
 
 if __name__ == "__main__":
@@ -139,13 +150,22 @@ if __name__ == "__main__":
         default=25,
         help="Maximum number of posts to parse.")
     parser.add_argument(
-        '-s',
-        '--subdirs',
+        '-r',
+        '--reddit-subdirs',
+        default=False,
+        action='store_true',
+        help="Create subdirectories for posts in each subreddit.")
+    parser.add_argument(
+        '-u',
+        '--user-subdirs',
         default=False,
         action='store_true',
         help="Create subdirectories for posts by each user.")
     parser.add_argument('subreddits', nargs='+', metavar='subreddit')
     args = parser.parse_args()
 
-    rs = RSnatcher("rsnatcher/0.1 (subreddit image and video grabber)", subdirs=args.subdirs)
+    rs = RSnatcher(
+            "rsnatcher/0.2 (subreddit image and video grabber)",
+            reddit_subdirs=args.reddit_subdirs,
+            user_subdirs=args.user_subdirs)
     rs.snatch(args.subreddits)
