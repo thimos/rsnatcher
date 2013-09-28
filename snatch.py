@@ -9,6 +9,7 @@ import re
 import requests
 import subprocess
 import sys
+import urllib.parse
 
 
 class RSnatcher(object):
@@ -19,10 +20,13 @@ class RSnatcher(object):
                      'spankwire.com', 'totallynsfw.com', 'xnxx.com',
                      'xhamster.com', 'xtube.com', 'xvideos.com', 'youjizz.com')
 
-    def __init__(self, user_agent, reddit_subdirs=False, user_subdirs=False):
+    def __init__(self, user_agent, reddit_subdirs=False, user_subdirs=False,
+            imgur_client_id=None):
         self.user_agent = user_agent
         self.reddit_subdirs = reddit_subdirs
         self.user_subdirs = user_subdirs
+        self.imgur_client_id = imgur_client_id
+
         self.image_regex = re.compile(self.image_re)
         self.video_regex = re.compile(
             '.*(' +
@@ -121,7 +125,7 @@ class RSnatcher(object):
                 self.download(url, subreddit=subreddit, user=author)
 
             # check if this post is a video
-            if self.video_regex.match(url):
+            elif self.video_regex.match(url):
                 print((subreddit, title, author, url))
 
                 quvid = subprocess.check_output(['quvi', url])
@@ -133,8 +137,47 @@ class RSnatcher(object):
                     subreddit=subreddit,
                     user=author)
 
+            # check if this post is an imgur link
+            elif self.imgur_client_id and 'imgur.com' in url:
+                print((subreddit, title, author, url))
+
+                u = urllib.parse.urlparse(url)
+                if u.path.split('/')[1] == 'a':
+                    # album
+                    r = requests.get(
+                        'https://api.imgur.com/3/album/{id}/images'.format(
+                            id=os.path.basename(u.path)),
+                        headers={
+                            'User-Agent': self.user_agent,
+                            'Authorization': 'Client-ID ' + self.imgur_client_id,
+                        })
+                    if r.status_code == requests.codes.ok:
+                        data = r.json()
+                        for img in data['data']:
+                            self.download(
+                                url=img['link'],
+                                subreddit=subreddit,
+                                user=author)
+                else:
+                    # single image
+                    r = requests.get(
+                        'https://api.imgur.com/3/image/{id}'.format(
+                            id=os.path.basename(u.path)),
+                        headers={
+                            'User-Agent': self.user_agent,
+                            'Authorization': 'Client-ID ' + self.imgur_client_id,
+                        })
+                    if r.status_code == requests.codes.ok:
+                        img = r.json()
+                        self.download(
+                            url=img['data']['link'],
+                            subreddit=subreddit,
+                            user=author)
+
             # check if this post is a tumblr link
-            if 'tumblr.com/post' in url:
+            elif 'tumblr.com/post' in url:
+                print((subreddit, title, author, url))
+
                 r = requests.get(url, headers={'User-Agent': self.user_agent})
                 m = self.tumblr_video_regex.search(r.text)
                 if m:
@@ -167,5 +210,6 @@ if __name__ == "__main__":
     rs = RSnatcher(
             "rsnatcher/0.2 (subreddit image and video grabber)",
             reddit_subdirs=args.reddit_subdirs,
-            user_subdirs=args.user_subdirs)
+            user_subdirs=args.user_subdirs,
+            imgur_client_id="605e125ee9a2948")
     rs.snatch(args.subreddits)
