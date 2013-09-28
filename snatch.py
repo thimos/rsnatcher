@@ -21,7 +21,7 @@ class RSnatcher(object):
                      'xhamster.com', 'xtube.com', 'xvideos.com', 'youjizz.com')
 
     def __init__(self, user_agent, reddit_subdirs=False, user_subdirs=False,
-            imgur_client_id=None):
+                 imgur_client_id=None):
         self.user_agent = user_agent
         self.reddit_subdirs = reddit_subdirs
         self.user_subdirs = user_subdirs
@@ -37,7 +37,7 @@ class RSnatcher(object):
             )
 
     def download(self, url, title=None, length=None, subreddit=None,
-            user=None):
+                 user=None):
         # we do this to get the final URL
         r = requests.get(
             url,
@@ -149,7 +149,8 @@ class RSnatcher(object):
                             id=os.path.basename(u.path)),
                         headers={
                             'User-Agent': self.user_agent,
-                            'Authorization': 'Client-ID ' + self.imgur_client_id,
+                            'Authorization': 'Client-ID {}'.format(
+                                self.imgur_client_id),
                         })
                     if r.status_code == requests.codes.ok:
                         data = r.json()
@@ -165,7 +166,8 @@ class RSnatcher(object):
                             id=os.path.basename(u.path)),
                         headers={
                             'User-Agent': self.user_agent,
-                            'Authorization': 'Client-ID ' + self.imgur_client_id,
+                            'Authorization': 'Client-ID {}'.format(
+                                self.imgur_client_id),
                         })
                     if r.status_code == requests.codes.ok:
                         img = r.json()
@@ -185,7 +187,8 @@ class RSnatcher(object):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="subreddit image and video grabber")
+    parser = argparse.ArgumentParser(
+        description="subreddit image and video grabber")
     parser.add_argument(
         '-l',
         '--limit',
@@ -208,8 +211,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     rs = RSnatcher(
-            "rsnatcher/0.2 (subreddit image and video grabber)",
-            reddit_subdirs=args.reddit_subdirs,
-            user_subdirs=args.user_subdirs,
-            imgur_client_id="605e125ee9a2948")
+        "rsnatcher/0.2 (subreddit image and video grabber)",
+        reddit_subdirs=args.reddit_subdirs,
+        user_subdirs=args.user_subdirs,
+        imgur_client_id="605e125ee9a2948")
     rs.snatch(args.subreddits)
