@@ -8,6 +8,7 @@ import progressbar
 import re
 import requests
 import subprocess
+import sys
 
 
 class RSnatcher(object):
@@ -88,6 +89,10 @@ class RSnatcher(object):
                 subreddits='+'.join(subreddits),
                 limit=limit),
             headers={'User-Agent': self.user_agent})
+        if r.status_code != requests.codes.ok:
+            print("Error loading subreddit", file=sys.stderr)
+            return
+
         subs = r.json()['data']['children']
         for sub in subs:
             subreddit = sub['data']['subreddit']
