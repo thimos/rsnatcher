@@ -14,7 +14,7 @@ import sys
 class RSnatcher(object):
     image_re = r'.*\.(jpeg|jpg|png)$'
     video_domains = ('beeg.com', 'gayforit.eu', 'gotgayporn.com',
-                     'empflix.com', 'jizzhut.lua', 'keezmovies.com',
+                     'empflix.com', 'jizzhut.com', 'keezmovies.com',
                      'manhub.com', 'pornhub.com', 'redtube.com',
                      'spankwire.com', 'totallynsfw.com', 'xnxx.com',
                      'xhamster.com', 'xtube.com', 'xvideos.com', 'youjizz.com')
